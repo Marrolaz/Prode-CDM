@@ -377,9 +377,9 @@ const RulesModal = ({onClose}) => (
 
       <div style={{color:"rgba(255,255,255,.5)",fontSize:10,fontWeight:700,letterSpacing:1,marginBottom:5,textTransform:"uppercase"}}>Reglas generales</div>
       {[
-        "🔒 Cada partido cierra 30 min antes del inicio.",
+        "🔒 El pronóstico de cada partido cierra 30 minutos antes del inicio.",
         "⏱️ En eliminatorias el resultado es a 120 min (con alargue). Penales no cuentan.",
-        "📅 Campeón cierra 30 min antes del primer partido (11 Jun, 16:00 hs).",
+        "📅 El pronóstico del campeón cierra 30 minutos antes del primer partido (11 Jun, 16:00 hs).",
         "👑 Solo el admin carga resultados y equipos de eliminatorias.",
       ].map((rule,i)=>(
         <div key={i} style={{fontSize:11,color:"rgba(255,255,255,.6)",padding:"4px 0",borderBottom:i<3?"1px solid rgba(255,255,255,.06)":"none",lineHeight:1.4}}>{rule}</div>
