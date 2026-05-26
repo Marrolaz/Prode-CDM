@@ -612,8 +612,8 @@ export default function App() {
     <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#060d1f 0%,#0b1f4a 35%,#091930 65%,#040e1e 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:16,position:"relative",overflow:"hidden"}}>
       <GlobalCSS/><ParticleCanvas/><FloatingDeco/>
       <div style={{position:"relative",zIndex:2,textAlign:"center",marginBottom:28,animation:"slideUp .5s ease-out"}}>
-        <div style={{animation:"float 3.5s ease-in-out infinite",marginBottom:14}}>
-          <img src="/logo-cdm.png" alt="CDM" style={{height:80,filter:"drop-shadow(0 0 24px rgba(116,172,223,.5))",display:"block",margin:"0 auto"}}/>
+        <div style={{marginBottom:16,animation:"float 3.5s ease-in-out infinite"}}>
+          <img src="/logo-cdm.png" alt="CDM" style={{height:90,display:"block",margin:"0 auto",filter:"brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(185deg) brightness(1.4)",dropShadow:"0 0 30px rgba(116,172,223,.6)"}}/>
         </div>
         <h1 style={{fontFamily:"'Bangers',cursive",fontSize:"clamp(36px,8vw,54px)",color:"#FFD700",letterSpacing:4,lineHeight:1,textShadow:"0 0 40px rgba(255,215,0,.5),0 4px 0 rgba(0,0,0,.6)"}}>PRODE CDM</h1>
         <div style={{fontFamily:"'Bangers',cursive",fontSize:"clamp(18px,4vw,26px)",color:"rgba(116,172,223,.9)",letterSpacing:7,marginTop:4}}>MUNDIAL 2026</div>
@@ -654,7 +654,7 @@ export default function App() {
       <div className="glass" style={{position:"sticky",top:0,zIndex:100,borderRadius:0,borderTop:"none",borderLeft:"none",borderRight:"none",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(6,13,31,.7)",backdropFilter:"blur(20px)"}}>
         <div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <img src="/logo-cdm.png" alt="CDM" style={{height:28,filter:"brightness(0) invert(1)",opacity:.85}}/>
+            <img src="/logo-cdm.png" alt="CDM" style={{height:26,filter:"brightness(0) invert(1) sepia(1) saturate(1.5) hue-rotate(185deg) brightness(1.3)",opacity:.95}}/>
             <div>
               <div style={{fontFamily:"'Bangers',cursive",color:"#FFD700",fontSize:18,letterSpacing:2,lineHeight:1,textShadow:"0 0 20px rgba(255,215,0,.4)"}}>PRODE CDM</div>
               <div style={{color:"rgba(116,172,223,.7)",fontSize:10,letterSpacing:2,fontWeight:600,marginTop:1}}>MUNDIAL 2026 ⚽</div>
