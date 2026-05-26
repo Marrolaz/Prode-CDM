@@ -513,6 +513,47 @@ const MatchCard = ({match, pred={}, real={}, locked, isAdmin, onPredChange, onRe
   );
 };
 
+// ── GROUP STANDINGS ──────────────────────────────────────────
+function calcGroupStandings(groupLetter, results) {
+  const teams = {
+    A:["México","Sudáfrica","Corea del Sur","Rep. Checa"],
+    B:["Canadá","Bosnia y Herzegovina","Qatar","Suiza"],
+    C:["Brasil","Marruecos","Haití","Escocia"],
+    D:["Estados Unidos","Paraguay","Australia","Turquía"],
+    E:["Alemania","Curazao","Costa de Marfil","Ecuador"],
+    F:["Países Bajos","Japón","Suecia","Túnez"],
+    G:["Bélgica","Egipto","Irán","Nueva Zelanda"],
+    H:["España","Cabo Verde","Arabia Saudita","Uruguay"],
+    I:["Francia","Senegal","Irak","Noruega"],
+    J:["Argentina","Argelia","Austria","Jordania"],
+    K:["Portugal","R.D. Congo","Uzbekistán","Colombia"],
+    L:["Inglaterra","Croacia","Ghana","Panamá"],
+  };
+  const groupTeams = teams[groupLetter] || [];
+  const stats = {};
+  groupTeams.forEach(t => { stats[t] = {pts:0,j:0,g:0,e:0,p:0,gf:0,gc:0}; });
+
+  const matches = GROUP_MATCHES.filter(m => m.group === groupLetter);
+  matches.forEach(m => {
+    const r = results[m.id];
+    if (!r || r.home==null || r.home==="" || r.away==null || r.away==="") return;
+    const gh = parseInt(r.home), ga = parseInt(r.away);
+    if (isNaN(gh)||isNaN(ga)) return;
+    const sh = stats[m.home], sa = stats[m.away];
+    if (!sh||!sa) return;
+    sh.j++; sa.j++;
+    sh.gf+=gh; sh.gc+=ga;
+    sa.gf+=ga; sa.gc+=gh;
+    if (gh>ga) { sh.pts+=3; sh.g++; sa.p++; }
+    else if (gh<ga) { sa.pts+=3; sa.g++; sh.p++; }
+    else { sh.pts+=1; sa.pts+=1; sh.e++; sa.e++; }
+  });
+
+  return groupTeams
+    .map(t => ({team:t, ...stats[t], dif: stats[t].gf - stats[t].gc}))
+    .sort((a,b) => b.pts-a.pts || b.dif-a.dif || b.gf-a.gf);
+}
+
 // ── MAIN APP ──────────────────────────────────────────────────
 export default function App() {
   const [screen,setScreen]=useState("login");
@@ -733,6 +774,9 @@ export default function App() {
         {!currentUser?.isAdmin&&<button className={`tab-btn${activeTab==="prode"?" active":""}`} onClick={()=>setActiveTab("prode")}>⚽ Mi Prode</button>}
         {!currentUser?.isAdmin&&<button className={`tab-btn${activeTab==="campeon"?" active":""}`} onClick={()=>setActiveTab("campeon")}>🏆 Campeón</button>}
         <button className={`tab-btn${activeTab==="tabla"?" active":""}`} onClick={()=>setActiveTab("tabla")}>📊 Tabla</button>
+        {!currentUser?.isAdmin&&<button className={`tab-btn${activeTab==="prode"?" active":""}`} onClick={()=>setActiveTab("prode")}>⚽ Mi Prode</button>}
+        {!currentUser?.isAdmin&&<button className={`tab-btn${activeTab==="campeon"?" active":""}`} onClick={()=>setActiveTab("campeon")}>🏆 Campeón</button>}
+        <button className={`tab-btn${activeTab==="grupos"?" active":""}`} onClick={()=>setActiveTab("grupos")}>🌍 Grupos</button>
         {!currentUser?.isAdmin&&<button className={`tab-btn${activeTab==="stats"?" active":""}`} onClick={()=>{setActiveTab("stats");setStatsUser(currentUser?.username);}}>📈 Mis Stats</button>}
         {currentUser?.isAdmin&&<button className={`tab-btn${activeTab==="admin"?" active":""}`} onClick={()=>setActiveTab("admin")}>👑 Resultados</button>}
         {currentUser?.isAdmin&&<button className={`tab-btn${activeTab==="slots"?" active":""}`} onClick={()=>setActiveTab("slots")}>🔧 Equipos KO</button>}
