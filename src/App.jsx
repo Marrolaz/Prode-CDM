@@ -552,6 +552,12 @@ export default function App() {
   };
 
   const handleLogout=()=>{setCurrentUser(null);setScreen("login");setLoginForm({username:"",password:""});};
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const isLocked=(match)=>new Date()>=new Date(new Date(match.date).getTime()-30*60*1000);
 
   const setPrediction=async(matchId,side,val)=>{
