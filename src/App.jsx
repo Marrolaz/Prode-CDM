@@ -735,6 +735,11 @@ export default function App() {
     showToast(`🗑️ ${username} eliminado`);
   };
 
+  const savePaid=async(username, paid)=>{
+    await supabase.from("users").update({paid}).eq("username",username);
+    setUsers(prev=>prev.map(u=>u.username===username?{...u,paid}:u));
+  };
+
   const setKnockoutTeam=async(matchId,side,val)=>{
     setKnockoutMatches(prev=>prev.map(m=>m.id===matchId?{...m,[side]:val}:m));
     const updated=knockoutMatches.find(m=>m.id===matchId);
@@ -1224,7 +1229,11 @@ export default function App() {
           <div style={{animation:"slideUp .4s ease-out"}}>
             <div style={{textAlign:"center",marginBottom:18}}>
               <h2 style={{fontFamily:"'Bangers',cursive",color:"#FFD700",fontSize:26,letterSpacing:2}}>👥 GESTIÓN DE USUARIOS</h2>
-              <p style={{color:"rgba(255,255,255,.35)",fontSize:13,marginTop:4}}>{users.filter(u=>!u.isAdmin).length}/35 participantes registrados</p>
+              <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:6,flexWrap:"wrap"}}>
+              <span style={{fontSize:13,color:"rgba(255,255,255,.5)"}}>{users.filter(u=>!u.isAdmin).length}/35 participantes</span>
+              <span style={{fontSize:13,color:"#4ade80",fontWeight:700}}>● {users.filter(u=>!u.isAdmin&&u.paid).length} pagaron</span>
+              <span style={{fontSize:13,color:"#f87171",fontWeight:700}}>● {users.filter(u=>!u.isAdmin&&!u.paid).length} deben</span>
+            </div>
             </div>
             {userActionMsg&&<div style={{background:"rgba(239,68,68,.12)",border:"1px solid rgba(239,68,68,.3)",borderRadius:10,padding:"8px 14px",marginBottom:12,fontSize:13,color:"#f87171",textAlign:"center"}}>{userActionMsg}</div>}
             {users.filter(u=>!u.isAdmin).sort((a,b)=>a.username.localeCompare(b.username)).map((u,i)=>{
@@ -1232,33 +1241,34 @@ export default function App() {
               const userPts = lb.find(x=>x.username===u.username)?.points||0;
               const userRank = lb.findIndex(x=>x.username===u.username)+1;
               return (
-                <div key={u.username} className="glass" style={{borderRadius:14,padding:"12px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:10}}>
-                  <div style={{fontSize:18,minWidth:26}}>{predictions[u.username]?.emoji||"⚽"}</div>
-                  <div style={{flex:1}}>
-                    {isEditing ? (
-                      <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                        <input
-                          defaultValue={u.username}
-                          id={`rename-${u.username}`}
-                          style={{background:"rgba(255,255,255,.1)",border:"1.5px solid rgba(255,215,0,.4)",borderRadius:8,color:"#fff",padding:"6px 10px",fontSize:13,fontFamily:"'Plus Jakarta Sans',sans-serif",flex:1,minWidth:120,outline:"none"}}
-                          onKeyDown={e=>{if(e.key==="Enter")renameUser(u.username,e.target.value);if(e.key==="Escape")setEditingUser(null);}}
-                        />
-                        <button onClick={()=>{const v=document.getElementById(`rename-${u.username}`).value;renameUser(u.username,v);}} style={{background:"rgba(74,222,128,.2)",border:"1px solid rgba(74,222,128,.4)",borderRadius:8,color:"#4ade80",padding:"6px 12px",cursor:"pointer",fontSize:12,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>✓ Guardar</button>
-                        <button onClick={()=>{setEditingUser(null);setUserActionMsg("");}} style={{background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.15)",borderRadius:8,color:"rgba(255,255,255,.5)",padding:"6px 10px",cursor:"pointer",fontSize:12,fontFamily:"'Plus Jakarta Sans',sans-serif"}}>✕</button>
-                      </div>
-                    ) : (
-                      <div>
-                        <div style={{color:"#fff",fontWeight:700,fontSize:14}}>{u.username}</div>
-                        <div style={{color:"rgba(255,255,255,.35)",fontSize:11,marginTop:2}}>#{userRank} · {userPts} pts</div>
+                <div key={u.username} className="glass" style={{borderRadius:14,padding:"12px 16px",marginBottom:8}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{fontSize:18,minWidth:26}}>{predictions[u.username]?.emoji||"⚽"}</div>
+                    <div style={{flex:1}}>
+                      {isEditing?(
+                        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                          <input defaultValue={u.username} id={`rename-${u.username}`} style={{background:"rgba(255,255,255,.1)",border:"1.5px solid rgba(255,215,0,.4)",borderRadius:8,color:"#fff",padding:"6px 10px",fontSize:13,fontFamily:"'Plus Jakarta Sans',sans-serif",flex:1,minWidth:120,outline:"none"}} onKeyDown={e=>{if(e.key==="Enter")renameUser(u.username,e.target.value);if(e.key==="Escape")setEditingUser(null);}}/>
+                          <button onClick={()=>{const v=document.getElementById(`rename-${u.username}`).value;renameUser(u.username,v);}} style={{background:"rgba(74,222,128,.2)",border:"1px solid rgba(74,222,128,.4)",borderRadius:8,color:"#4ade80",padding:"6px 12px",cursor:"pointer",fontSize:12,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>✓</button>
+                          <button onClick={()=>{setEditingUser(null);setUserActionMsg("");}} style={{background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.15)",borderRadius:8,color:"rgba(255,255,255,.5)",padding:"6px 10px",cursor:"pointer",fontSize:12}}>✕</button>
+                        </div>
+                      ):(
+                        <div>
+                          <div style={{color:"#fff",fontWeight:700,fontSize:14}}>{u.username}</div>
+                          <div style={{color:"rgba(255,255,255,.35)",fontSize:11,marginTop:2}}>#{userRank} · {userPts} pts</div>
+                        </div>
+                      )}
+                    </div>
+                    {!isEditing&&(
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <button onClick={()=>savePaid(u.username,!u.paid)} style={{background:u.paid?"rgba(74,222,128,.15)":"rgba(239,68,68,.15)",border:`1px solid ${u.paid?"rgba(74,222,128,.4)":"rgba(239,68,68,.4)"}`,borderRadius:20,padding:"4px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,transition:"all .2s"}}>
+                          <div style={{width:8,height:8,borderRadius:"50%",background:u.paid?"#4ade80":"#ef4444",flexShrink:0}}/>
+                          <span style={{fontSize:11,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,color:u.paid?"#4ade80":"#f87171"}}>{u.paid?"Pagó":"No pagó"}</span>
+                        </button>
+                        <button onClick={()=>{setEditingUser({username:u.username});setUserActionMsg("");}} style={{background:"rgba(255,215,0,.1)",border:"1px solid rgba(255,215,0,.25)",borderRadius:8,color:"#FFD700",padding:"6px 10px",cursor:"pointer",fontSize:12,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>✏️</button>
+                        <button onClick={()=>deleteUser(u.username)} style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.25)",borderRadius:8,color:"#f87171",padding:"6px 10px",cursor:"pointer",fontSize:12,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>🗑️</button>
                       </div>
                     )}
                   </div>
-                  {!isEditing&&(
-                    <div style={{display:"flex",gap:6}}>
-                      <button onClick={()=>{setEditingUser({username:u.username});setUserActionMsg("");}} style={{background:"rgba(255,215,0,.1)",border:"1px solid rgba(255,215,0,.25)",borderRadius:8,color:"#FFD700",padding:"6px 12px",cursor:"pointer",fontSize:12,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>✏️ Renombrar</button>
-                      <button onClick={()=>deleteUser(u.username)} style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.25)",borderRadius:8,color:"#f87171",padding:"6px 12px",cursor:"pointer",fontSize:12,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>🗑️</button>
-                    </div>
-                  )}
                 </div>
               );
             })}
