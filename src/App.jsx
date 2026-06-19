@@ -408,7 +408,7 @@ const RulesModal = ({onClose}) => (
             <div key={label} style={{display:"flex",alignItems:"center",gap:8}}>
               <span style={{fontSize:16}}>{medal}</span>
               <span style={{color:"rgba(255,255,255,.6)",fontSize:12,flex:1}}>{label}</span>
-              <span style={{fontFamily:"'Bangers',cursive",color:"#FFD700",fontSize:16,letterSpacing:.5}}>{prize}</span>
+              <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,color:"#FFD700",fontSize:14}}>{prize}</span>
             </div>
           ))}
         </div>
