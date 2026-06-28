@@ -431,6 +431,65 @@ const GlobalCSS=()=>(
 );
 
 // ── RULES MODAL ───────────────────────────────────────────────
+// ── MODAL DE CIERRE DEL MUNDIAL ────────────────────────────────
+const TournamentEndModal = ({rank, totalParticipants, prize, pctCorrect, pctExact, onClose}) => {
+  const isLast = rank === totalParticipants;
+  let title, subtitle, titleColor, glowColor;
+
+  if (rank === 1) {
+    title = "🏆 👑 ¡CAMPEÓN DEL PRODE! 👑 🏆";
+    subtitle = `Premio: $${prize.toLocaleString("es-AR")}`;
+    titleColor = "#FFD700";
+    glowColor = "rgba(255,215,0,.4)";
+  } else if (rank === 2) {
+    title = "🥈 ¡SUBCAMPEÓN! 🥈";
+    subtitle = `Premio: $${prize.toLocaleString("es-AR")}`;
+    titleColor = "#E8E8F0";
+    glowColor = "rgba(232,232,240,.35)";
+  } else if (rank === 3) {
+    title = "🥉 ¡3er PUESTO! 🥉";
+    subtitle = `Premio: $${prize.toLocaleString("es-AR")}`;
+    titleColor = "#D08A4F";
+    glowColor = "rgba(208,138,79,.35)";
+  } else if (rank === 4) {
+    title = `📊 Terminaste #${rank}`;
+    subtitle = "Tan cerca del podio... 😢";
+    titleColor = "#fff";
+    glowColor = "rgba(255,255,255,.15)";
+  } else if (isLast) {
+    title = `📊 Terminaste #${rank}`;
+    subtitle = "Los últimos serán los primeros... 👀";
+    titleColor = "#fff";
+    glowColor = "rgba(255,255,255,.15)";
+  } else if (rank <= 10) {
+    title = `📊 Terminaste #${rank} 😬`;
+    subtitle = "";
+    titleColor = "#fff";
+    glowColor = "rgba(255,255,255,.15)";
+  } else {
+    title = `📊 Terminaste #${rank} 🙈`;
+    subtitle = "";
+    titleColor = "#fff";
+    glowColor = "rgba(255,255,255,.15)";
+  }
+
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:2000,background:"rgba(0,0,0,.85)",backdropFilter:"blur(10px)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={onClose}>
+      <div className="glass" style={{borderRadius:24,padding:"32px 26px",maxWidth:380,width:"100%",textAlign:"center",animation:"modalIn .3s ease-out",boxShadow:`0 0 60px ${glowColor}`,position:"relative"}} onClick={e=>e.stopPropagation()}>
+        <button onClick={onClose} style={{position:"absolute",top:14,right:14,background:"rgba(255,255,255,.1)",border:"none",borderRadius:"50%",width:30,height:30,color:"rgba(255,255,255,.7)",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+        <div style={{fontSize:48,marginBottom:8,animation:"float 3s ease-in-out infinite"}}>🏁</div>
+        <h2 style={{fontFamily:"'Bangers',cursive",color:titleColor,fontSize:24,letterSpacing:1,lineHeight:1.3,textShadow:`0 0 30px ${glowColor}`,marginBottom:10}}>{title}</h2>
+        {subtitle && <div style={{fontFamily:rank<=3?"'Bangers',cursive":"'Plus Jakarta Sans',sans-serif",fontWeight:rank<=3?400:600,color:rank<=3?"#4ade80":"rgba(255,255,255,.6)",fontSize:rank<=3?20:14,marginBottom:16}}>{subtitle}</div>}
+        <div style={{background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",borderRadius:12,padding:"12px 16px",marginTop:14,fontSize:13,color:"rgba(255,255,255,.7)",lineHeight:1.6}}>
+          🎯 Acertaste el <strong style={{color:"#4ade80"}}>{pctCorrect}%</strong> de los ganadores y el <strong style={{color:"#FFD700"}}>{pctExact}%</strong> de los resultados exactos
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// ── RULES MODAL ───────────────────────────────────────────────
 const RulesModal = ({onClose}) => (
   <div style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.75)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:12}} onClick={onClose}>
     <div className="glass" style={{borderRadius:20,padding:"14px 16px",maxWidth:400,width:"100%",animation:"modalIn .25s ease-out",boxShadow:"0 32px 80px rgba(0,0,0,.6)"}} onClick={e=>e.stopPropagation()}>
@@ -671,10 +730,11 @@ export default function App() {
   const [champSearch,setChampSearch]=useState("");
   const [loading,setLoading]=useState(true);
   const [showRules,setShowRules]=useState(false);
-  const [editingUser,setEditingUser]=useState(null); // {username, newName}
-  const [userActionMsg,setUserActionMsg]=useState("");
   const [othersMatch,setOthersMatch]=useState(null);
   const [statsUser,setStatsUser]=useState(null);
+  const [showTournamentEnd,setShowTournamentEnd]=useState(false);
+  const [editingUser,setEditingUser]=useState(null);
+  const [userActionMsg,setUserActionMsg]=useState("");
 
   // Auto-tick each 30s for lock re-evaluation
   const [tick,setTick]=useState(0);
@@ -686,6 +746,7 @@ export default function App() {
   useEffect(()=>{
     (async()=>{
       try {
+        // Fetch predictions with pagination to avoid Supabase's default 1000-row limit
         const fetchAllPredictions = async () => {
           let all = [];
           let from = 0;
@@ -763,6 +824,7 @@ export default function App() {
   const setPrediction=async(matchId,side,val)=>{
     const clean=val.replace(/[^0-9]/g,"").slice(0,2);
     const otherSide=side==="home"?"away":"home";
+    // Read the most current snapshot via a ref-like pattern: use predictionsRef to avoid stale closures
     const currentMatches = predictionsRef.current[currentUser.username]?.matches?.[matchId] || {};
     const newPred = {...currentMatches, [side]: clean};
     if (clean !== "" && (currentMatches[otherSide] == null || currentMatches[otherSide] === "")) {
@@ -803,15 +865,24 @@ export default function App() {
     await supabase.from("predictions").upsert({username:currentUser.username,match_id:-1,home_pred:null,away_pred:null,champion:emoji},{onConflict:"username,match_id"});
   };
 
+  const deleteUser=async(username)=>{
+    if(!window.confirm(`¿Eliminar a ${username}? Se borrarán todos sus pronósticos.`)) return;
+    await supabase.from("users").delete().eq("username",username);
+    await supabase.from("predictions").delete().eq("username",username);
+    setUsers(prev=>prev.filter(u=>u.username!==username));
+    setPredictions(prev=>{const newP={...prev};delete newP[username];return newP;});
+    showToast(`🗑️ ${username} eliminado`);
+  };
+
   const renameUser=async(oldName, newName)=>{
     if(!newName.trim()||newName===oldName) return;
     if(users.find(u=>u.username===newName)){setUserActionMsg("Ese nombre ya existe.");return;}
-    // Update users table
-    await supabase.from("users").update({username:newName}).eq("username",oldName);
-    // Update predictions table
+    const user = users.find(u=>u.username===oldName);
+    if(!user) return;
+    await supabase.from("users").insert({username:newName, password:user.password});
     await supabase.from("predictions").update({username:newName}).eq("username",oldName);
+    await supabase.from("users").delete().eq("username",oldName);
     setUsers(prev=>prev.map(u=>u.username===oldName?{...u,username:newName}:u));
-    // Update local predictions
     setPredictions(prev=>{
       const newP={...prev};
       if(newP[oldName]){newP[newName]=newP[oldName];delete newP[oldName];}
@@ -820,15 +891,6 @@ export default function App() {
     setEditingUser(null);
     showToast(`✅ ${oldName} → ${newName}`);
     setUserActionMsg("");
-  };
-
-  const deleteUser=async(username)=>{
-    if(!window.confirm(`¿Eliminar a ${username}? Se borrarán todos sus pronósticos.`)) return;
-    await supabase.from("users").delete().eq("username",username);
-    await supabase.from("predictions").delete().eq("username",username);
-    setUsers(prev=>prev.filter(u=>u.username!==username));
-    setPredictions(prev=>{const newP={...prev};delete newP[username];return newP;});
-    showToast(`🗑️ ${username} eliminado`);
   };
 
   const savePaid=async(username, paid)=>{
@@ -857,6 +919,17 @@ export default function App() {
   };
 
   const inp=(extra={})=>({width:"100%",padding:"13px 16px",borderRadius:12,background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.15)",color:"#fff",fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:15,...extra});
+
+  // Mostrar el modal de cierre del mundial una sola vez por usuario, cuando el admin ya cargó el campeón
+  useEffect(()=>{
+    if(!currentUser||currentUser.isAdmin) return;
+    if(!results.champion) return;
+    if(lb.length===0) return;
+    const seenKey=`tournamentEndSeen_${currentUser.username}`;
+    if(localStorage.getItem(seenKey)) return;
+    setShowTournamentEnd(true);
+    localStorage.setItem(seenKey,"true");
+  },[currentUser,results.champion,lb.length]);
 
   if(loading) return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#060d1f,#0b1f4a,#091930)",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -907,6 +980,20 @@ export default function App() {
       <GlobalCSS/><ParticleCanvas/><FloatingDeco/>
       {showRules&&<RulesModal onClose={()=>setShowRules(false)}/>}
       {othersMatch&&<OthersModal match={othersMatch} predictions={predictions} users={users} results={results} onClose={()=>setOthersMatch(null)}/>}
+      {showTournamentEnd&&(()=>{
+        const ranked=calcRankingsWithPrizes(lb);
+        const myEntry=ranked.find(e=>e.username===currentUser.username);
+        if(!myEntry) return null;
+        const st=calcStats(currentUser.username,predictions,results,knockoutMatches);
+        return <TournamentEndModal
+          rank={myEntry.rank}
+          totalParticipants={ranked.length}
+          prize={myEntry.prize}
+          pctCorrect={st.pctCorrect}
+          pctExact={st.pctExact}
+          onClose={()=>setShowTournamentEnd(false)}
+        />;
+      })()}
       {toast&&<div style={{position:"fixed",bottom:76,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#22c55e,#16a34a)",color:"#fff",padding:"10px 26px",borderRadius:50,fontWeight:700,zIndex:9999,animation:"toastIn .3s ease-out",whiteSpace:"nowrap",boxShadow:"0 8px 24px rgba(34,197,94,.4)",fontSize:14}}>{toast}</div>}
 
       {/* HEADER */}
@@ -1331,13 +1418,13 @@ export default function App() {
             <div style={{textAlign:"center",marginBottom:18}}>
               <h2 style={{fontFamily:"'Bangers',cursive",color:"#FFD700",fontSize:26,letterSpacing:2}}>👥 GESTIÓN DE USUARIOS</h2>
               <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:6,flexWrap:"wrap"}}>
-              <span style={{fontSize:13,color:"rgba(255,255,255,.5)"}}>{users.filter(u=>!u.isAdmin).length}/35 participantes</span>
-              <span style={{fontSize:13,color:"#4ade80",fontWeight:700}}>● {users.filter(u=>!u.isAdmin&&u.paid).length} pagaron</span>
-              <span style={{fontSize:13,color:"#f87171",fontWeight:700}}>● {users.filter(u=>!u.isAdmin&&!u.paid).length} deben</span>
-            </div>
+                <span style={{fontSize:13,color:"rgba(255,255,255,.5)"}}>{users.filter(u=>!u.isAdmin).length}/35 participantes</span>
+                <span style={{fontSize:13,color:"#4ade80",fontWeight:700}}>● {users.filter(u=>!u.isAdmin&&u.paid).length} pagaron</span>
+                <span style={{fontSize:13,color:"#f87171",fontWeight:700}}>● {users.filter(u=>!u.isAdmin&&!u.paid).length} deben</span>
+              </div>
             </div>
             {userActionMsg&&<div style={{background:"rgba(239,68,68,.12)",border:"1px solid rgba(239,68,68,.3)",borderRadius:10,padding:"8px 14px",marginBottom:12,fontSize:13,color:"#f87171",textAlign:"center"}}>{userActionMsg}</div>}
-            {users.filter(u=>!u.isAdmin).sort((a,b)=>a.username.localeCompare(b.username)).map((u,i)=>{
+            {users.filter(u=>!u.isAdmin).sort((a,b)=>a.username.localeCompare(b.username)).map((u)=>{
               const isEditing = editingUser?.username===u.username;
               const userPts = lb.find(x=>x.username===u.username)?.points||0;
               const userRank = lb.findIndex(x=>x.username===u.username)+1;
