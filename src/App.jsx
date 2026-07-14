@@ -483,6 +483,9 @@ const TournamentEndModal = ({rank, totalParticipants, prize, pctCorrect, pctExac
         <div style={{background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",borderRadius:12,padding:"12px 16px",marginTop:14,fontSize:13,color:"rgba(255,255,255,.7)",lineHeight:1.6}}>
           🎯 Acertaste el <strong style={{color:"#4ade80"}}>{pctCorrect}%</strong> de los ganadores y el <strong style={{color:"#FFD700"}}>{pctExact}%</strong> de los resultados exactos
         </div>
+        {rank===1&&<div style={{background:"rgba(255,215,0,.1)",border:"1px solid rgba(255,215,0,.3)",borderRadius:12,padding:"10px 14px",marginTop:10,fontSize:13,color:"#FFD700",fontWeight:700,textAlign:"center"}}>
+          🥐 Obligación: mañana llevar facturas a los perdedores
+        </div>}
       </div>
     </div>
   );
